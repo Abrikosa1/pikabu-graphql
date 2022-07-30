@@ -1,5 +1,8 @@
 version: '3.8'
 
+volumes:
+  postgres_data:
+
 services:
   postgres:
     container_name: postgres_service
@@ -10,12 +13,27 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - ${DB_PORT}:${DB_PORT}
+
+  node:
+    container_name: node
+    build:
+      context: .
+      dockerfile: 'Dockerfile'
+    depends_on:
+      - postgres
+    ports:
+      - ${PORT}:${PORT}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
 
   adminer:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - ${ADMINER_PORT}:${ADMINER_PORT}
